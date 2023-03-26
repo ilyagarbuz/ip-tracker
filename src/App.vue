@@ -6,8 +6,11 @@ import IconArrow from '@/components/icons/IconArrow.vue'
 import 'leaflet/dist/leaflet.css'
 
 const map = ref(null)
+const ipData = ref(null)
 
 onMounted(() => {
+  // Init map
+
   map.value = L.map('map', { zoomControl: false }).setView([53.9067, 27.5818], 10)
   L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -16,10 +19,17 @@ onMounted(() => {
   const myIcon = L.icon({
     iconUrl: '/images/icon-location.svg',
 
-    iconSize: [27, 36], // size of the icon
+    iconSize: [27, 36] // size of the icon
   })
 
   L.marker([53.9067, 27.5818], { icon: myIcon }).addTo(map.value)
+
+  // get ip
+
+  fetch('https://api.ipgeolocation.io/ipgeo?apiKey=a2fe82f928e84f3096400fcb3dee816c')
+    .then((response) => response.json())
+    .then((data) => (ipData.value = data))
+    .catch((error) => console.error(error))
 })
 </script>
 
@@ -45,20 +55,7 @@ onMounted(() => {
 
       <!-- Info -->
       <ul
-        class="
-          max-w-[1110px]
-          mx-auto
-          bg-white
-          rounded-2xl
-          grid grid-cols-1
-          md:grid-cols-2
-          lg:grid-cols-4
-          py-5
-          md:py-10
-          px-6
-          gap-7
-          lg:gap-0
-        "
+        class="max-w-[1110px] mx-auto bg-white rounded-2xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 py-5 md:py-10 px-6 gap-7 lg:gap-0"
       >
         <li class="px-6 text-center lg:border-r border-gray-300 last:border-none">
           <div
@@ -66,7 +63,10 @@ onMounted(() => {
           >
             IP ADDRESS
           </div>
-          <div class="font-medium text-xl md:text-2xl">192.212.174.101</div>
+          <div class="font-medium text-xl md:text-2xl">
+            <span v-if="ipData">{{ ipData.ip }}</span>
+            <span v-else>Loading...</span>
+          </div>
         </li>
         <li class="px-6 text-center lg:border-r border-gray-300 last:border-none">
           <div
@@ -74,7 +74,10 @@ onMounted(() => {
           >
             LOCATION
           </div>
-          <div class="font-medium text-xl md:text-2xl">Brooklyn, NY 10001</div>
+          <div class="font-medium text-xl md:text-2xl">
+            <span v-if="ipData">{{ ipData.country_name }}, {{ ipData.city }}</span>
+            <span v-else>Loading...</span>
+          </div>
         </li>
         <li class="px-6 text-center lg:border-r border-gray-300 last:border-none">
           <div
@@ -82,7 +85,10 @@ onMounted(() => {
           >
             TIMEZONE
           </div>
-          <div class="font-medium text-xl md:text-2xl">UTC -05:00</div>
+          <div class="font-medium text-xl md:text-2xl">
+            <span v-if="ipData">{{ ipData.time_zone.current_time }}</span>
+            <span v-else>Loading...</span>
+          </div>
         </li>
         <li class="px-6 text-center lg:border-r border-gray-300 last:border-none">
           <div
@@ -90,7 +96,10 @@ onMounted(() => {
           >
             ISP
           </div>
-          <div class="font-medium text-xl md:text-2xl">SpaceX Starlink</div>
+          <div class="font-medium text-xl md:text-2xl">
+            <span v-if="ipData">{{ ipData.isp }}</span>
+            <span v-else>Loading...</span>
+          </div>
         </li>
       </ul>
 
