@@ -1,35 +1,25 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import L from 'leaflet'
-import IconArrow from '@/components/icons/IconArrow.vue'
+import { ref, onMounted } from "vue"
+import { fetchIpData } from "./api"
+import { initMap } from "./map"
+import IconArrow from "@/components/icons/IconArrow.vue"
 
-import 'leaflet/dist/leaflet.css'
+import "leaflet/dist/leaflet.css"
 
 const map = ref(null)
 const ipData = ref(null)
 
-onMounted(() => {
-  // Init map
+const getData = async () => {
+  try {
+    ipData.value = await fetchIpData()
+  } catch (error) {
+    console.log(error)
+  }
+}
 
-  map.value = L.map('map', { zoomControl: false }).setView([53.9067, 27.5818], 10)
-  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map.value)
-
-  const myIcon = L.icon({
-    iconUrl: '/images/icon-location.svg',
-
-    iconSize: [27, 36] // size of the icon
-  })
-
-  L.marker([53.9067, 27.5818], { icon: myIcon }).addTo(map.value)
-
-  // get ip
-
-  fetch('https://api.ipgeolocation.io/ipgeo?apiKey=a2fe82f928e84f3096400fcb3dee816c')
-    .then((response) => response.json())
-    .then((data) => (ipData.value = data))
-    .catch((error) => console.error(error))
+onMounted(async () => {
+  await getData()
+  initMap(map, ipData.value.latitude, ipData.value.longitude)
 })
 </script>
 
@@ -42,11 +32,11 @@ onMounted(() => {
       <!-- Input -->
       <form class="flex max-w-[556px] mx-auto mb-6 md:mb-10">
         <input
+          id="ip-input"
           class="w-full py-4 px-6 rounded-l-2xl text-lg outline-none border-0"
           type="text"
           name="ip-input"
           placeholder="Search for any IP address or domain"
-          id="ip-input"
         />
         <button type="submit" class="bg-gray-800 hover:bg-gray-700 py-5 px-7 rounded-r-2xl">
           <icon-arrow />
@@ -105,9 +95,6 @@ onMounted(() => {
 
       <!-- Map -->
     </div>
-    <div id="map" class="relative -z-10 w-full h-full pointer-events-auto"></div>
+    <div id="map" class="relative -z-10 w-full h-full pointer-events-auto" />
   </div>
 </template>
-
-
-
